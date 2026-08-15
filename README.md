@@ -99,6 +99,12 @@ and collapsing it would hide exactly the rule you needed to see.
   whose own article did not move. Conservative, and noisy in proportion to instrument size.
 - **It does not interpret.** Whether a superseded rule is still *substantially* correct is a legal
   judgement this package exists to route to a person, never to make.
+- **It models one of two staleness clocks.** This answers whether the *norm* has moved. It says
+  nothing about the **distribution** clock — how long since your engine last successfully
+  reconciled with its own policy source. Those are independent: an engine serving a cached policy
+  bundle after an outage is fully current on the norm and hours stale on distribution, and the
+  reverse is equally possible. A verdict that carries neither age looks identical to a fresh one.
+  Bound both, or you have measured the clock that was easier to reach.
 
 ## Origin & prior art
 
