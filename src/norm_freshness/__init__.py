@@ -30,6 +30,12 @@ Closed I/O: this package resolves nothing and reaches no network. You inject the
 observed :class:`SourceState` — from an ELI/Akoma Ntoso resolver, a semantic
 legislative differ, a vendor feed, or a human. The core is stdlib-only.
 
+Two assumptions the caller owns. Version strings are **opaque and unordered**, so a
+difference is read as the source having moved *forward*; a pin ahead of its source
+(a bad feed, clock skew) is indistinguishable from ordinary drift. And a
+fragment-qualified observation key (``uri#fragment``) takes precedence over the
+bare instrument URI where one is supplied.
+
 Grounded in EU AI Act (Reg. 2024/1689) Art. 12 record-keeping and Art. 72
 post-market monitoring: a record is interpretable only against the norm actually
 in force when it was made.
@@ -41,7 +47,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Mapping
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "SourceRef",
@@ -53,12 +59,24 @@ __all__ = [
     "Determination",
     "FreshnessReport",
     "OPTIONS",
+    "OPTIONS_BY_CAUSE",
     "assess",
     "assess_rule",
 ]
 
-#: The options a :class:`Determination` offers. The machine picks none of them.
+#: Default options where the cause is an ordinary supersession.
 OPTIONS = ("re-pin", "reassess", "halt")
+
+#: Options per cause. ``re-pin`` is offered **only** where something exists to pin
+#: to — never for a repeal (the instrument is gone) and never for an unresolvable
+#: source (it was never reached). Offering an impossible option degrades the
+#: judgement this module exists to route to a person.
+OPTIONS_BY_CAUSE: dict[str, tuple[str, ...]] = {
+    "superseded":   ("re-pin", "reassess", "halt"),
+    "repealed":     ("retire", "reassess", "halt"),
+    "undetermined": ("investigate", "reassess", "halt"),
+    "unresolvable": ("retry", "reassess", "halt"),
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -143,6 +161,17 @@ class Freshness(str, Enum):
     UNGROUNDED = "ungrounded"
 
 
+def _options_for(freshness: "Freshness", change_kind: ChangeKind | None) -> tuple[str, ...]:
+    """Options follow the cause. Never offer an action that cannot be taken."""
+    if freshness is Freshness.UNRESOLVABLE:
+        return OPTIONS_BY_CAUSE["unresolvable"]
+    if freshness is Freshness.UNDETERMINED:
+        return OPTIONS_BY_CAUSE["undetermined"]
+    if change_kind is ChangeKind.REPEAL:
+        return OPTIONS_BY_CAUSE["repealed"]
+    return OPTIONS_BY_CAUSE["superseded"]
+
+
 #: Verdicts that oblige a person to look. Everything else is enforceable as-is.
 _NEEDS_HUMAN = frozenset(
     {Freshness.SUPERSEDED, Freshness.UNDETERMINED, Freshness.UNRESOLVABLE}
@@ -158,6 +187,10 @@ class RuleVerdict:
     detail: str = ""
     pinned_version: str | None = None
     current_version: str | None = None
+    #: The observed change kind, where one was supplied. Carried so a caller can
+    #: tell a repeal from an amendment — both read SUPERSEDED, and they warrant
+    #: different responses.
+    change_kind: ChangeKind | None = None
 
     @property
     def requires_determination(self) -> bool:
@@ -265,6 +298,7 @@ def assess_rule(pin: RulePin, state: SourceState | None) -> RuleVerdict:
             f"{state.uri} moved {pinned} → {state.current_version} ({kind.value})",
             pinned,
             state.current_version,
+            kind,
         )
     # An unrecognised kind is an unknown kind, and unknown means undetermined.
     return RuleVerdict(
@@ -295,12 +329,24 @@ def assess(
     resolved = 0
 
     for pin in pins:
-        state = lookup.get(pin.source.uri) if pin.source is not None else None
+        state = None
+        if pin.source is not None:
+            # A fragment-qualified observation is more specific and wins; the bare
+            # instrument URI is the fallback. Previously a fragment-keyed entry was
+            # silently ignored, letting a caller believe they had supplied
+            # per-article data when they had not.
+            if pin.source.fragment:
+                state = lookup.get(f"{pin.source.uri}#{pin.source.fragment}")
+            if state is None:
+                state = lookup.get(pin.source.uri)
         verdict = assess_rule(pin, state)
         verdicts.append(verdict)
         if verdict.freshness in (Freshness.CURRENT, Freshness.EDITORIAL_DRIFT, Freshness.SUPERSEDED):
             resolved += 1
         if verdict.requires_determination:
-            determinations.append(Determination(verdict.rule_id, verdict.freshness, verdict.detail))
+            determinations.append(Determination(
+                verdict.rule_id, verdict.freshness, verdict.detail,
+                _options_for(verdict.freshness, verdict.change_kind),
+            ))
 
     return FreshnessReport(tuple(verdicts), tuple(determinations), resolved, len(verdicts))

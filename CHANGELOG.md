@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.0 — 2026-08-16
+
+Found by using the package as a consumer would rather than by testing it against its own
+assumptions.
+
+- **Options now follow the cause.** `re-pin` was offered for every determination, including a
+  **repeal** (the instrument is gone) and an **unresolvable** source (it was never reached) — an
+  action that cannot be taken. Repeal offers `retire`, unresolvable offers `retry`, undetermined
+  offers `investigate`. In a terminal-for-machine design the options *are* the product; an
+  impossible one degrades the judgement it exists to route to a person.
+- **`RuleVerdict.change_kind`** carries the cause, since a repeal and an amendment both read
+  `SUPERSEDED` and warrant different responses.
+- **Fragment-keyed observations are honoured.** An observation keyed `uri#fragment` now takes
+  precedence over the instrument-level one, falling back to the bare URI. Previously such a key
+  was accepted and **silently ignored**, letting a caller believe they had supplied per-article
+  data when they had not.
+- Documented an assumption the caller owns: version strings are opaque and unordered, so a pin
+  ahead of its source is indistinguishable from ordinary drift.
+
+Back-compatible: `OPTIONS` is unchanged and still the amendment case.
+
 ## 0.1.0 — 2026-08-15
 
 Initial draft. The norm-freshness verdict: per-rule staleness for compiled rules pinned to a

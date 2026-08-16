@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "norm-freshness"
-version = "0.1.0"
+version = "0.2.0"
 description = "Is the rule you enforce still the rule that was written? A per-rule staleness verdict a gate can consume — graded by change kind, fail-closed, terminal-for-machine."
 readme = "README.md"
 requires-python = ">=3.10"

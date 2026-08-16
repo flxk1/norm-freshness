@@ -51,7 +51,7 @@ False 0.5
   gate.record-keeping      editorial-drift
   gate.mgmt-system         unresolvable
   gate.house-style         ungrounded
-  gate.mgmt-system ('re-pin', 'reassess', 'halt')
+  gate.mgmt-system ('retry', 'reassess', 'halt')
 ```
 
 ## Verdicts
@@ -80,6 +80,17 @@ False 0.5
   counts against `coverage`, not against the rule.
 - **Terminal-for-machine.** Nothing re-pins, recompiles, disables or halts. A flagged rule yields a
   `Determination` carrying options for a person to close.
+- **Options follow the cause** (0.2.0). `re-pin` is offered only where something exists to pin to.
+
+  | cause | options |
+  |---|---|
+  | amendment / commencement | `re-pin` · `reassess` · `halt` |
+  | repeal | `retire` · `reassess` · `halt` — the instrument is gone |
+  | undetermined | `investigate` · `reassess` · `halt` — re-pinning before knowing what changed is premature |
+  | unresolvable | `retry` · `reassess` · `halt` — the source was never reached |
+
+  `RuleVerdict.change_kind` carries the cause, since a repeal and an amendment both read
+  `SUPERSEDED`.
 - `assess` returns per-rule verdicts and no aggregate freshness. A rule set is not one rule.
 - No clock, no network, no identifier dereferencing.
 
@@ -88,8 +99,14 @@ False 0.5
 - **It resolves nothing.** `SourceState` is yours to supply; its quality bounds everything here.
 - **Change-kind grading is only as good as your differ.** Without one, every move lands as
   `UNDETERMINED` — honest, but less useful.
-- **Fragment-level precision is not checked.** Freshness is assessed at instrument version, so an
-  amendment elsewhere in the same instrument flags a rule whose article did not move.
+- **Fragment-level precision depends on your observations.** Supply an observation keyed
+  `uri#fragment` and it takes precedence over the instrument-level one; supply only the bare URI
+  and freshness is assessed at instrument version, so an amendment elsewhere in the same
+  instrument flags a rule whose article did not move. *(Before 0.2.0 a fragment-keyed observation
+  was accepted and silently ignored.)*
+- **Version strings are opaque and unordered.** A difference is read as the source having moved
+  *forward*. A pin **ahead** of its source — a bad feed, clock skew — is indistinguishable from
+  ordinary drift and will be reported as such.
 - **It models one of two staleness clocks.** This is the *norm* clock. It says nothing about the
   *distribution* clock — how long since your engine last reconciled with its own policy source. An
   engine serving a cached bundle after an outage is current on the first and stale on the second.

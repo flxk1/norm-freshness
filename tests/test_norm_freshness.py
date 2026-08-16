@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from norm_freshness import (  # noqa: E402
     OPTIONS,
+    OPTIONS_BY_CAUSE,
     ChangeKind,
     Determination,
     Freshness,
@@ -30,7 +31,7 @@ from norm_freshness import (  # noqa: E402
 AI_ACT = "http://data.europa.eu/eli/reg/2024/1689/oj"
 
 
-def pin(rule_id="rule-1", uri=AI_ACT, version="2024-07-12", fragment="art_14"):
+def pin(rule_id="rule-1", uri=AI_ACT, version="2024-07-12", fragment=None):
     return RulePin(rule_id, SourceRef(uri, version, fragment))
 
 
@@ -199,6 +200,73 @@ class TestPurity(unittest.TestCase):
         for forbidden in ("import requests", "import urllib", "import http", "import socket",
                           "datetime.now", "time.time"):
             self.assertNotIn(forbidden, source, f"{forbidden} breaks closed I/O")
+
+
+
+class TestOptionsFollowTheCause(unittest.TestCase):
+    """The options are the product. Never offer an action that cannot be taken."""
+
+    def determination(self, kind=None, current="2025-01-01"):
+        report = assess([pin()], {AI_ACT: SourceState(AI_ACT, current, kind)})
+        self.assertEqual(len(report.determinations), 1)
+        return report.determinations[0]
+
+    def test_a_repeal_offers_retire_never_re_pin(self):
+        """A repealed instrument is gone; there is nothing to re-pin to."""
+        d = self.determination(ChangeKind.REPEAL)
+        self.assertEqual(d.options, ("retire", "reassess", "halt"))
+        self.assertNotIn("re-pin", d.options)
+
+    def test_an_unresolvable_source_offers_retry_never_re_pin(self):
+        """The source was never reached; re-pinning to it is not an option."""
+        d = self.determination(current=None)
+        self.assertEqual(d.options, ("retry", "reassess", "halt"))
+        self.assertNotIn("re-pin", d.options)
+
+    def test_an_undetermined_move_offers_investigate_not_re_pin(self):
+        """Re-pinning before knowing what changed is premature."""
+        d = self.determination(ChangeKind.UNKNOWN)
+        self.assertEqual(d.options, ("investigate", "reassess", "halt"))
+
+    def test_an_amendment_still_offers_re_pin(self):
+        for kind in (ChangeKind.AMENDMENT, ChangeKind.COMMENCEMENT):
+            with self.subTest(kind=kind):
+                self.assertEqual(self.determination(kind).options, ("re-pin", "reassess", "halt"))
+
+    def test_every_cause_offers_halt_and_reassess(self):
+        for options in OPTIONS_BY_CAUSE.values():
+            self.assertIn("halt", options)
+            self.assertIn("reassess", options)
+
+    def test_the_verdict_carries_the_change_kind(self):
+        """A repeal and an amendment both read SUPERSEDED; the cause must survive."""
+        report = assess([pin()], {AI_ACT: SourceState(AI_ACT, "2025-01-01", ChangeKind.REPEAL)})
+        v = report.verdicts[0]
+        self.assertIs(v.freshness, Freshness.SUPERSEDED)
+        self.assertIs(v.change_kind, ChangeKind.REPEAL)
+
+
+class TestFragmentObservations(unittest.TestCase):
+    """A fragment-keyed observation used to be accepted and silently ignored."""
+
+    def test_a_fragment_qualified_observation_wins(self):
+        observed = {
+            AI_ACT: SourceState(AI_ACT, "2025-01-01", ChangeKind.AMENDMENT),
+            f"{AI_ACT}#art_14": SourceState(f"{AI_ACT}#art_14", "2024-07-12"),
+        }
+        report = assess([pin("r", fragment="art_14")], observed)
+        self.assertIs(report.verdicts[0].freshness, Freshness.CURRENT,
+                      "the more specific observation must win over the instrument-level one")
+
+    def test_it_falls_back_to_the_bare_uri(self):
+        report = assess([pin("r", fragment="art_14")],
+                        {AI_ACT: SourceState(AI_ACT, "2024-07-12")})
+        self.assertIs(report.verdicts[0].freshness, Freshness.CURRENT)
+
+    def test_a_rule_without_a_fragment_is_unaffected(self):
+        report = assess([RulePin("r", SourceRef(AI_ACT, "2024-07-12"))],
+                        {AI_ACT: SourceState(AI_ACT, "2024-07-12")})
+        self.assertIs(report.verdicts[0].freshness, Freshness.CURRENT)
 
 
 if __name__ == "__main__":
