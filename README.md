@@ -131,6 +131,19 @@ The package consumed it unmodified. The run surfaced the two limitations above: 
 `UNDETERMINED` ceiling without a differ, and the permalink footgun, where pinning CELEX
 `32024R1689` reports `CURRENT` against an act that has in fact been amended.
 
+## Conformance
+
+`conformance/vectors.json` is the specification: 14 language-agnostic vectors, each an input and
+the result any implementation must produce. `conformance/check_vectors.py` checks this one.
+
+```bash
+python3 conformance/check_vectors.py
+```
+
+The refusals are most of the suite, because they are what a reimplementation gets wrong — and
+getting one wrong converts a refusal into a false assurance, which is worse than the missing
+feature. An empty suite exits 2 rather than reporting success.
+
 ## Prior art
 
 Legal versioning and change detection are owned upstream: **ELI**, **Akoma Ntoso / LegalDocML**,

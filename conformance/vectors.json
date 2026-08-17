@@ -1,0 +1,363 @@
+{
+  "schema": "norm-freshness-conformance/1",
+  "package_version": "0.3.0",
+  "note": "Language-agnostic conformance vectors. An implementation conforms if it reproduces every expectation from the corresponding input. The refusals \u2014 undetermined, unresolvable, ungrounded \u2014 and the cause-specific options are the point: they are what a reimplementation gets wrong, and getting them wrong turns a refusal into a false assurance.",
+  "vectors": [
+    {
+      "id": "current",
+      "note": "pinned version matches the source",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v1"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "current"
+        }
+      }
+    },
+    {
+      "id": "editorial-drift-stays-enforceable",
+      "note": "a corrigendum is drift, not supersession; a checker that halted on typo fixes would be switched off",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "editorial"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "editorial-drift"
+        },
+        "ok": true
+      }
+    },
+    {
+      "id": "amendment-supersedes",
+      "note": "a substantive change stops the rule firing",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "amendment"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "superseded"
+        },
+        "ok": false
+      }
+    },
+    {
+      "id": "unknown-kind-is-undetermined",
+      "note": "a bare version difference cannot distinguish a corrigendum from a repeal, so neither verdict is returned",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "unknown"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "undetermined"
+        }
+      }
+    },
+    {
+      "id": "absent-kind-is-undetermined",
+      "note": "the same refusal when the differ supplied nothing",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "undetermined"
+        }
+      }
+    },
+    {
+      "id": "unresolved-source-is-unresolvable",
+      "note": "an unreachable registry is not a clean bill of health",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": null
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "unresolvable"
+        },
+        "ok": false
+      }
+    },
+    {
+      "id": "missing-observation-is-unresolvable",
+      "note": "a pin never looked up is not CURRENT; silence is not evidence of no change",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {},
+      "expect": {
+        "freshness": {
+          "r": "unresolvable"
+        }
+      }
+    },
+    {
+      "id": "no-source-is-ungrounded",
+      "note": "a rule citing nothing makes no claim that could go stale",
+      "rules": [
+        {
+          "rule_id": "r"
+        }
+      ],
+      "observed": {},
+      "expect": {
+        "freshness": {
+          "r": "ungrounded"
+        },
+        "ok": true,
+        "coverage": 0.0
+      }
+    },
+    {
+      "id": "repeal-offers-retire-not-re-pin",
+      "note": "the instrument is gone; there is nothing to re-pin to, and offering it degrades the judgement",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "repeal"
+        }
+      },
+      "expect": {
+        "options": {
+          "r": [
+            "retire",
+            "reassess",
+            "halt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unresolvable-offers-retry-not-re-pin",
+      "note": "the source was never reached",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": null
+        }
+      },
+      "expect": {
+        "options": {
+          "r": [
+            "retry",
+            "reassess",
+            "halt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "undetermined-offers-investigate",
+      "note": "re-pinning before knowing what changed is premature",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "unknown"
+        }
+      },
+      "expect": {
+        "options": {
+          "r": [
+            "investigate",
+            "reassess",
+            "halt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "amendment-offers-re-pin",
+      "note": "the ordinary case",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "amendment"
+        }
+      },
+      "expect": {
+        "options": {
+          "r": [
+            "re-pin",
+            "reassess",
+            "halt"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fragment-observation-wins",
+      "note": "a fragment-qualified observation is more specific than the instrument-level one",
+      "rules": [
+        {
+          "rule_id": "r",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1",
+            "fragment": "art_14"
+          }
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v2",
+          "change_kind": "amendment"
+        },
+        "urn:eli:test#art_14": {
+          "uri": "urn:eli:test#art_14",
+          "current_version": "v1"
+        }
+      },
+      "expect": {
+        "freshness": {
+          "r": "current"
+        }
+      }
+    },
+    {
+      "id": "coverage-is-the-honest-denominator",
+      "note": "a rule set can be entirely CURRENT at low coverage; the figure states how small a question was answered",
+      "rules": [
+        {
+          "rule_id": "a",
+          "source": {
+            "uri": "urn:eli:test",
+            "version": "v1"
+          }
+        },
+        {
+          "rule_id": "b"
+        }
+      ],
+      "observed": {
+        "urn:eli:test": {
+          "uri": "urn:eli:test",
+          "current_version": "v1"
+        }
+      },
+      "expect": {
+        "coverage": 0.5
+      }
+    }
+  ]
+}
