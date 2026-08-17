@@ -98,8 +98,15 @@ False 0.5
 ## Limitations
 
 - **It resolves nothing.** `SourceState` is yours to supply; its quality bounds everything here.
-- **Change-kind grading is only as good as your differ.** Without one, every move lands as
-  `UNDETERMINED` — honest, but less useful.
+- **Change-kind grading is only as good as your differ, and the ceiling is low without one.**
+  EUR-Lex publishes consolidation dates and an "this act has been changed" flag; it does not
+  publish the *kind* of change. So against the primary EU legal source, unaided, every moved
+  instrument lands as `UNDETERMINED` and the graded verdicts — `EDITORIAL_DRIFT`, `SUPERSEDED` —
+  are unreachable. Honest, and a real limit on utility. Measured in `examples/eur_lex.py`.
+- **`version` must change when the instrument changes.** A consolidation date qualifies; a
+  permalink does not. CELEX, ELI and DOI identify the *act*, not a version of it, and survive
+  amendment untouched — pin one and the assessment reads `CURRENT` for ever. The package cannot
+  detect this: version strings are opaque to it by design.
 - **Fragment-level precision depends on your observations.** Supply an observation keyed
   `uri#fragment` and it takes precedence over the instrument-level one; supply only the bare URI
   and freshness is assessed at instrument version, so an amendment elsewhere in the same
@@ -113,6 +120,16 @@ False 0.5
   engine serving a cached bundle after an outage is current on the first and stale on the second.
 - It does not interpret. Whether a superseded rule remains substantially correct is a legal
   judgement for a person.
+
+## Against a real source
+
+`examples/eur_lex.py` assesses rules pinned to Regulation (EU) 2024/1689 using what EUR-Lex
+actually publishes — read off the live record on 2026-08-17, where the act carries two
+consolidations (12/07/2024 and 27/07/2026) and the status "This act has been changed".
+
+The package consumed it unmodified. The run surfaced the two limitations above: the
+`UNDETERMINED` ceiling without a differ, and the permalink footgun, where pinning CELEX
+`32024R1689` reports `CURRENT` against an act that has in fact been amended.
 
 ## Prior art
 

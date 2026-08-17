@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Mapping
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "SourceRef",
@@ -89,6 +89,14 @@ class SourceRef:
 
     ``uri`` is any stable identifier — an ELI, a CELEX number, a standard's
     designation, an internal document id. This package never dereferences it.
+
+    ``version`` carries a contract the caller must meet: **it must be a value that
+    changes when the instrument changes.** A consolidation date qualifies. A
+    *permalink* does not — a CELEX number, an ELI, a DOI identify the act rather
+    than a version of it, and are unaffected by amendment. Pin one and every
+    assessment returns CURRENT for as long as the rule exists, because version
+    strings are opaque here: this package cannot tell a version from a permalink.
+    See ``examples/eur_lex.py``.
     """
 
     uri: str

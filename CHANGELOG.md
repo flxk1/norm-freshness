@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0 — 2026-08-17
+
+No behaviour change; two limitations documented that only appeared when the package was pointed at
+a real legal source instead of its author's fixtures.
+
+`examples/eur_lex.py` assesses rules against the live EUR-Lex record for Regulation (EU) 2024/1689.
+It consumed it unmodified, and exposed:
+
+- **A ceiling.** EUR-Lex publishes consolidation dates and a "this act has been changed" flag, not
+  the *kind* of change. Unaided, every moved instrument lands as `UNDETERMINED` and the graded
+  verdicts are unreachable from that source alone.
+- **A footgun, now a stated contract.** `SourceRef.version` must be a value that CHANGES when the
+  instrument changes. A permalink — CELEX, ELI, DOI — identifies the act rather than a version of
+  it and survives amendment untouched; pin one and the assessment reads `CURRENT` for ever. The
+  package cannot detect this, since version strings are opaque to it by design.
+
 ## 0.2.0 — 2026-08-16
 
 Found by using the package as a consumer would rather than by testing it against its own
