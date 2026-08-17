@@ -10,16 +10,13 @@ enforcing a superseded text without signalling anything.
 ## Install
 
 ```bash
-pip install norm-freshness
-```
-
-No runtime dependencies. Or straight from the repository, no release required:
-
-```bash
 pip install "git+https://github.com/flxk1/norm-freshness"
 ```
 
-Tests: `pip install ".[test]"` from a clone.
+No runtime dependencies.
+
+Distributed from this repository; there is no package-index release. Tests:
+`pip install ".[test]"` from a clone.
 
 ## Usage
 
