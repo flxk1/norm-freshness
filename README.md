@@ -10,10 +10,11 @@ enforcing a superseded text without signalling anything.
 ## Install
 
 ```bash
-pip install .
+pip install "git+https://github.com/flxk1/norm-freshness"
 ```
 
-No runtime dependencies. Tests: `pip install ".[test]"`.
+No runtime dependencies. Tests: `pip install ".[test]"` from a clone. **Not yet on PyPI**, so the git URL is the
+install.
 
 ## Usage
 
