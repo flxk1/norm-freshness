@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Mapping
 
-__version__ = "0.3.0"
+from ._version import __version__
 
 __all__ = [
     "SourceRef",
