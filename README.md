@@ -2,6 +2,10 @@
 
 Per-rule freshness verdict for compiled rules pinned to a versioned source, computed at decision time from injected observations of that source.
 
+## Problem
+
+The rule in force is the rule as compiled months ago. Per-rule freshness verdict against the versioned source, fail-closed.
+
 ## Install
 
 `pip install "git+https://github.com/flxk1/norm-freshness"`
@@ -12,6 +16,15 @@ Per-rule freshness verdict for compiled rules pinned to a versioned source, comp
 rules = [RulePin("gate.human-oversight", SourceRef(AI_ACT, "2024-07-12", "art_14"))]
 observed = {AI_ACT: SourceState(AI_ACT, "2024-11-20", ChangeKind.EDITORIAL)}
 assess(rules, observed).verdicts[0].freshness.value   # editorial-drift
+```
+
+## Example
+
+```
+in : assess([RulePin("gate.erasure", SourceRef("eli/reg/2016/679", "2016-05-04", "art_17"))],
+            {"eli/reg/2016/679": SourceState("eli/reg/2016/679", "2027-01-01", ChangeKind.EDITORIAL)}).verdicts[0]
+out: Freshness.EDITORIAL_DRIFT
+     eli/reg/2016/679 moved 2016-05-04 → 2027-01-01 (editorial); text unchanged in substance
 ```
 
 ## Interface
