@@ -43,6 +43,10 @@ Assurance artifact, pillar "source validity" of [governance-certification](https
 
 0.3.0 · 30 tests · 14 conformance vectors · Python ≥ 3.10
 
+## How this is made
+
+The code and documentation are written with Loomground agents running on Claude (Anthropic). The maintainer reads and corrects all of it.
+
 ## License
 
 MIT — [LICENSES/MIT.txt](LICENSES/MIT.txt)
